@@ -1,8 +1,8 @@
 from flask import Flask
 
 from .config import Config
-from app.routes.auth import auth_bp
 from .utils.database import db, bcrypt
+from app.routes.admin_auth import admin_auth
 
 
 def create_app():
@@ -13,6 +13,7 @@ def create_app():
     db.init_app(app)
     bcrypt.init_app(app)
 
-    app.register_blueprint(auth_bp, url_prefix="/api/auth")
+    app.register_blueprint(admin_auth, url_prefix="/api/admin/auth")
+    # app.register_blueprint(employee_crud, url_prefix="/api/employee")
 
     return app

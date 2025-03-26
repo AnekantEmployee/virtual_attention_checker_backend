@@ -1,11 +1,11 @@
-from flask import Blueprint, request, jsonify
-from app.models import User
+from app.models import Admin
 from app.utils.database import db, bcrypt
+from flask import Blueprint, request, jsonify
 
-auth_bp = Blueprint("auth", __name__)
 
+admin_auth = Blueprint("auth", __name__)
 
-@auth_bp.route("/register", methods=["POST"])
+@admin_auth.route("/register", methods=["POST"])
 def register():
     data = request.get_json()
 
@@ -19,14 +19,20 @@ def register():
         return jsonify({"error": "Missing required fields"}), 400
 
     # Check if user exists
-    if User.query.filter_by(email=data["email"]).first():
+    if Admin.query.filter_by(email=data["email"].lower().strip()).first():
         return jsonify({"error": "Email already exists"}), 400
 
     # Hash password
-    hashed_password = bcrypt.generate_password_hash(data["password"]).decode("utf-8")
+    hashed_password = (
+        bcrypt.generate_password_hash(data["password"]).strip().decode("utf-8")
+    )
 
     # Create user
-    user = User(name=data["name"], email=data["email"], password=hashed_password)
+    user = Admin(
+        name=data["name"].strip(),
+        email=data["email"].lower().strip(),
+        password=hashed_password,
+    )
 
     db.session.add(user)
     db.session.commit()
@@ -34,7 +40,7 @@ def register():
     return (
         jsonify(
             {
-                "message": "User created successfully",
+                "message": "Admin created successfully",
                 "user": {"id": user.id, "name": user.name, "email": user.email},
             }
         ),
@@ -42,16 +48,18 @@ def register():
     )
 
 
-@auth_bp.route("/login", methods=["POST"])
+@admin_auth.route("/login", methods=["POST"])
 def login():
     data = request.get_json()
 
     if not data or not data.get("email") or not data.get("password"):
         return jsonify({"error": "Missing Email or Password"}), 400
 
-    user = User.query.filter_by(email=data["email"]).first()
+    user = Admin.query.filter_by(email=data["email"].lower().strip()).first()
 
-    if not user or not bcrypt.check_password_hash(user.password, data["password"]):
+    if not user or not bcrypt.check_password_hash(
+        user.password, data["password"].strip()
+    ):
         return jsonify({"error": "Invalid email or password"}), 401
 
     return (
