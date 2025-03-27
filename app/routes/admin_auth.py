@@ -5,6 +5,7 @@ from flask import Blueprint, request, jsonify
 
 admin_auth = Blueprint("auth", __name__)
 
+
 @admin_auth.route("/register", methods=["POST"])
 def register():
     data = request.get_json()
